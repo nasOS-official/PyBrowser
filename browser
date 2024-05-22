@@ -1,0 +1,106 @@
+#!/usr/bin/python3
+import sys
+from PyQt5.QtCore import QTimer, Qt, QUrl
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QSizePolicy, QAction, QLineEdit, QToolBar
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
+from PyQt5.QtGui import QPixmap, QPalette, QColor
+
+class BrowserWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(100, 100, 1024, 600)
+        self.setWindowTitle('Браузер')
+
+        self.label = QLabel(self)
+        self.pixmap = QPixmap('bslogo.png')
+        self.label.setPixmap(self.pixmap)
+        self.label.setAlignment(Qt.AlignCenter)
+
+        self.browser = QWebEngineView(self)
+        self.browser.setUrl(QUrl('https://pj-crystal.github.io'))
+        self.browser.hide()
+        self.browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        self.vbox = QVBoxLayout()
+        self.vbox.setContentsMargins(0, 0, 0, 0)
+        self.vbox.addWidget(self.label)
+        self.vbox.addWidget(self.browser)
+
+        self.central_widget = QWidget()
+        self.central_widget.setLayout(self.vbox)
+        self.setCentralWidget(self.central_widget)
+
+        QTimer.singleShot(1000, self.showWebPage)
+
+        self.navtb = QToolBar("Навигация")
+        self.addToolBar(self.navtb)
+
+        back_btn = QAction("Назад", self)
+        back_btn.triggered.connect(self.browser.back)
+        self.navtb.addAction(back_btn)
+
+        next_btn = QAction("Вперед", self)
+        next_btn.triggered.connect(self.browser.forward)
+        self.navtb.addAction(next_btn)
+
+        reload_btn = QAction("Обновить", self)
+        reload_btn.triggered.connect(self.browser.reload)
+        self.navtb.addAction(reload_btn)
+
+        self.urlbar = QLineEdit()
+        self.urlbar.returnPressed.connect(self.navigate_to_url)
+        self.navtb.addWidget(self.urlbar)
+        
+        go_btn = QAction("Перейти", self)
+        go_btn.triggered.connect(self.navigate_to_url)
+        self.navtb.addAction(go_btn)
+
+        self.browser.urlChanged.connect(self.update_urlbar)
+
+    def navigate_to_url(self):
+        url = self.urlbar.text()
+
+        if not url.startswith('http://') and not url.startswith('https://'):
+            url = 'http://' + url
+
+        self.browser.setUrl(QUrl(url))
+    
+    def update_urlbar(self, q):
+        self.urlbar.setText(q.toString())
+        self.urlbar.setCursorPosition(0)
+
+
+    def onPointerLockRequested(self):
+        return False
+
+    def showWebPage(self):
+        self.label.hide()
+        self.browser.show()
+
+def main():
+    app = QApplication(sys.argv)
+    app.setStyle("Elyzion")
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(255, 255, 255))
+    palette.setColor(QPalette.WindowText, Qt.black)
+    palette.setColor(QPalette.Base, QColor(255, 255, 255))
+    palette.setColor(QPalette.AlternateBase, QColor(255, 255, 255))
+    palette.setColor(QPalette.ToolTipBase, Qt.black)
+    palette.setColor(QPalette.ToolTipText, Qt.black)
+    palette.setColor(QPalette.Text, Qt.black)
+    palette.setColor(QPalette.Button, QColor(230, 230, 230))
+    palette.setColor(QPalette.ButtonText, Qt.black)
+    palette.setColor(QPalette.BrightText, Qt.red)
+    palette.setColor(QPalette.Link, QColor(180, 121, 255))
+    palette.setColor(QPalette.HighlightedText, Qt.black)
+    app.setPalette(palette)
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 0px solid white; }")
+    window = BrowserWindow()
+    window.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
